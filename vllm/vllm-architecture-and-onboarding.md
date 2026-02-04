@@ -395,4 +395,14 @@ Supported plugin types include:
 - GPU hot path: `~/vllm/vllm/v1/worker/gpu_model_runner.py`
 - Attention backend selection: `~/vllm/vllm/v1/attention/selector.py`
 - Python↔native ops glue: `~/vllm/vllm/_custom_ops.py` and `~/vllm/csrc/`
+- Deep dive guide: `vllm-custom-ops-and-native-kernels-deep-dive.md`
+
+---
+
+## 13) Reusable analysis scripts (for future repo archaeology)
+
+These live alongside this document so you can quickly re-run “what changed recently?” reports.
+
+- `scripts/git_activity_report.py`: generates a Markdown report from `git log` (subject tag trends, hot areas/files, churn).
+- `scripts/README.md`: usage examples + customizing the “area bucketing” rules.
 
