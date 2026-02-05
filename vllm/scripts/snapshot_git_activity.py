@@ -54,6 +54,20 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--repo", default=".", help="Path to git repo (default: cwd)")
     ap.add_argument("-n", type=int, default=50, help="Number of commits to analyze (default: 50)")
     ap.add_argument("--rev", default="HEAD", help="Revision/range for git log (default: HEAD)")
+    ap.add_argument(
+        "--path",
+        action="append",
+        default=[],
+        help=(
+            "Limit analysis to commits that touch this path (file or dir). "
+            "May be repeated. Forwarded to git_activity_report.py."
+        ),
+    )
+    ap.add_argument(
+        "--paths-file",
+        default=None,
+        help="Optional newline-delimited list of pathspecs (forwarded).",
+    )
     ap.add_argument("--rules", default=None, help="Optional rules JSON for area bucketing")
     ap.add_argument(
         "--out-dir",
@@ -76,6 +90,12 @@ def main(argv: list[str]) -> int:
         type=int,
         default=5,
         help="Top-K areas to show in work-items list (default: 5)",
+    )
+    ap.add_argument(
+        "--show-commits",
+        type=int,
+        default=0,
+        help="If >0, include a table listing the most recent matching commits (forwarded).",
     )
 
     args = ap.parse_args(argv)
@@ -115,6 +135,13 @@ def main(argv: list[str]) -> int:
     ]
     if args.rules:
         cmd += ["--rules", str(Path(args.rules).expanduser())]
+    if args.paths_file:
+        cmd += ["--paths-file", str(Path(args.paths_file).expanduser())]
+    for p in args.path:
+        if p and str(p).strip():
+            cmd += ["--path", str(p).strip()]
+    if args.show_commits:
+        cmd += ["--show-commits", str(args.show_commits)]
 
     subprocess.check_call(cmd)
 

@@ -21,6 +21,34 @@ From this notes repo:
 python3 scripts/git_activity_report.py --repo ~/vllm -n 50 --out /tmp/vllm-last-50.md
 ```
 
+### Monitoring a specific area (path-filtered)
+
+If you only care about “custom ops + native kernels” changes, filter by paths (same semantics as `git log -- <paths...>`):
+
+```bash
+python3 scripts/git_activity_report.py \
+  --repo ~/vllm -n 10 --show-commits 10 \
+  --path vllm/_custom_ops.py \
+  --path csrc \
+  --path vllm/v1/attention \
+  --out /tmp/vllm-kernels-last-10.md
+```
+
+You can also keep a list in a file:
+
+```bash
+cat > /tmp/vllm-kernel-paths.txt <<'EOF'
+# Custom ops glue + native kernels
+vllm/_custom_ops.py
+vllm/_aiter_ops.py
+csrc
+vllm/v1/attention
+EOF
+
+python3 scripts/git_activity_report.py --repo ~/vllm -n 10 --show-commits 10 \
+  --paths-file /tmp/vllm-kernel-paths.txt --out /tmp/vllm-kernels-last-10.md
+```
+
 ## `snapshot_git_activity.py`
 
 Convenience wrapper to generate a **timestamped** report under `./reports/` (relative to your current working directory), with an optional `latest-<repo>.md` copy.
@@ -31,6 +59,13 @@ From this notes repo:
 
 ```bash
 python3 scripts/snapshot_git_activity.py --repo ~/vllm -n 50 --latest
+```
+
+Path-filtered snapshot:
+
+```bash
+python3 scripts/snapshot_git_activity.py --repo ~/vllm -n 10 --latest --show-commits 10 \
+  --path vllm/_custom_ops.py --path csrc --path vllm/v1/attention
 ```
 
 Write into a specific folder:
@@ -45,6 +80,12 @@ If you’re in the notes folder (`/home/oldzhu/mynotes/vllm`), you can run:
 
 ```bash
 make vllm-last50
+```
+
+For custom-ops/native-kernels monitoring:
+
+```bash
+make vllm-kernels-last10
 ```
 
 Override the repo path if needed:

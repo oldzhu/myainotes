@@ -26,7 +26,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Iterable, Mapping
+from typing import Iterable
 
 
 DEFAULT_RULES = [
@@ -98,12 +98,71 @@ def bucket_path(path: str, rules: list[Rule]) -> str:
     return "other"
 
 
-def iter_subjects(repo: Path, n: int, rev: str, include_merges: bool) -> list[str]:
+def load_pathspec(paths: list[str], paths_file: Path | None) -> list[str]:
+    pathspec: list[str] = []
+    for p in paths:
+        p = (p or "").strip()
+        if p:
+            pathspec.append(p)
+
+    if paths_file is not None:
+        for line in paths_file.read_text(encoding="utf-8").splitlines():
+            s = line.strip()
+            if not s or s.startswith("#"):
+                continue
+            pathspec.append(s)
+
+    # Deduplicate while preserving order.
+    seen: set[str] = set()
+    out: list[str] = []
+    for p in pathspec:
+        if p in seen:
+            continue
+        seen.add(p)
+        out.append(p)
+    return out
+
+
+def _append_pathspec(args: list[str], pathspec: list[str]) -> list[str]:
+    if not pathspec:
+        return args
+    return [*args, "--", *pathspec]
+
+
+def iter_short_commits(
+    repo: Path,
+    n: int,
+    rev: str,
+    include_merges: bool,
+    pathspec: list[str],
+) -> list[tuple[str, str]]:
+    fmt = "%h%x09%s"
+    args = ["log", f"-{n}", rev, f"--pretty=format:{fmt}"]
+    if not include_merges:
+        args.insert(1, "--no-merges")
+    out = run_git(repo, _append_pathspec(args, pathspec))
+
+    commits: list[tuple[str, str]] = []
+    for line in out.splitlines():
+        if "\t" not in line:
+            continue
+        sha, subj = line.split("\t", 1)
+        commits.append((sha.strip(), subj.strip()))
+    return commits
+
+
+def iter_subjects(
+    repo: Path,
+    n: int,
+    rev: str,
+    include_merges: bool,
+    pathspec: list[str],
+) -> list[str]:
     fmt = "%H%x09%s"
     args = ["log", f"-{n}", rev, f"--pretty=format:{fmt}"]
     if not include_merges:
         args.insert(1, "--no-merges")
-    out = run_git(repo, args)
+    out = run_git(repo, _append_pathspec(args, pathspec))
 
     subjects: list[str] = []
     for line in out.splitlines():
@@ -114,13 +173,19 @@ def iter_subjects(repo: Path, n: int, rev: str, include_merges: bool) -> list[st
     return subjects
 
 
-def parse_numstat(repo: Path, n: int, rev: str, include_merges: bool) -> Iterable[tuple[int | None, int | None, str]]:
+def parse_numstat(
+    repo: Path,
+    n: int,
+    rev: str,
+    include_merges: bool,
+    pathspec: list[str],
+) -> Iterable[tuple[int | None, int | None, str]]:
     # None churn indicates binary change (added/deleted == '-')
     args = ["log", f"-{n}", rev]
     if not include_merges:
         args.insert(1, "--no-merges")
     args += ["--numstat", "--pretty=format:COMMIT"]
-    out = run_git(repo, args)
+    out = run_git(repo, _append_pathspec(args, pathspec))
 
     for line in out.splitlines():
         if not line.strip() or line.startswith("COMMIT"):
@@ -144,13 +209,19 @@ def parse_numstat(repo: Path, n: int, rev: str, include_merges: bool) -> Iterabl
             continue
 
 
-def parse_name_only(repo: Path, n: int, rev: str, include_merges: bool) -> list[tuple[str, list[str]]]:
+def parse_name_only(
+    repo: Path,
+    n: int,
+    rev: str,
+    include_merges: bool,
+    pathspec: list[str],
+) -> list[tuple[str, list[str]]]:
     fmt = "COMMIT%x09%H%x09%s"
     args = ["log", f"-{n}", rev]
     if not include_merges:
         args.insert(1, "--no-merges")
     args += ["--name-only", f"--pretty=format:{fmt}"]
-    out = run_git(repo, args)
+    out = run_git(repo, _append_pathspec(args, pathspec))
 
     commits: list[tuple[str, list[str]]] = []
     cur_subj: str | None = None
@@ -267,6 +338,21 @@ def main(argv: list[str]) -> int:
         help="Revision range base for log (default: HEAD). Examples: HEAD, main, v0.6.0..HEAD",
     )
     ap.add_argument("--include-merges", action="store_true", help="Include merge commits")
+    ap.add_argument(
+        "--path",
+        action="append",
+        default=[],
+        help=(
+            "Limit analysis to commits that touch this path (file or dir). "
+            "May be repeated. Equivalent to appending `-- <path>` to `git log`."
+        ),
+    )
+    ap.add_argument(
+        "--paths-file",
+        type=str,
+        default=None,
+        help="Optional newline-delimited list of pathspecs (comments with #).",
+    )
     ap.add_argument("--rules", type=str, default=None, help="Path to rules JSON file")
     ap.add_argument("--out", type=str, default="-", help="Output path (default: '-', stdout)")
     ap.add_argument("--top", type=int, default=10, help="Top-K for tables (default: 10)")
@@ -275,6 +361,12 @@ def main(argv: list[str]) -> int:
         type=int,
         default=5,
         help="Top-K areas to show in the 'work items' list (default: 5)",
+    )
+    ap.add_argument(
+        "--show-commits",
+        type=int,
+        default=0,
+        help="If >0, include a table listing the most recent matching commits (default: 0).",
     )
 
     args = ap.parse_args(argv)
@@ -290,15 +382,34 @@ def main(argv: list[str]) -> int:
 
     rules = load_rules(Path(args.rules).expanduser().resolve() if args.rules else None)
 
+    pathspec = load_pathspec(
+        args.path,
+        Path(args.paths_file).expanduser().resolve() if args.paths_file else None,
+    )
+
     head = run_git(repo, ["rev-parse", "--short", "HEAD"]).strip()
     branch = run_git(repo, ["rev-parse", "--abbrev-ref", "HEAD"]).strip()
 
-    subjects_all = iter_subjects(repo, args.n, args.rev, include_merges=args.include_merges)
+    subjects_all = iter_subjects(
+        repo,
+        args.n,
+        args.rev,
+        include_merges=args.include_merges,
+        pathspec=pathspec,
+    )
     prefixes = subject_prefix_counts(subjects_all, args.top)
     keywords = top_keywords(subjects_all, 15)
 
     # file touch + churn stats (prefer excluding merges for file metrics)
-    numstat = list(parse_numstat(repo, args.n, args.rev, include_merges=args.include_merges))
+    numstat = list(
+        parse_numstat(
+            repo,
+            args.n,
+            args.rev,
+            include_merges=args.include_merges,
+            pathspec=pathspec,
+        )
+    )
 
     area_freq = Counter()
     area_churn = Counter()
@@ -315,7 +426,13 @@ def main(argv: list[str]) -> int:
             file_churn[path] += churn
 
     # commits-per-area + sample subjects
-    commits = parse_name_only(repo, args.n, args.rev, include_merges=args.include_merges)
+    commits = parse_name_only(
+        repo,
+        args.n,
+        args.rev,
+        include_merges=args.include_merges,
+        pathspec=pathspec,
+    )
     area_commits = Counter()
     area_samples: dict[str, list[str]] = defaultdict(list)
     for subj, files in commits:
@@ -335,7 +452,25 @@ def main(argv: list[str]) -> int:
     lines.append("")
     lines.append(f"Repo: `{repo}`")
     lines.append(f"Generated: `{now}`")
+    if pathspec:
+        lines.append(f"Path filter: `{', '.join(pathspec)}`")
     lines.append("")
+
+    if args.show_commits > 0:
+        recent = iter_short_commits(
+            repo,
+            args.show_commits,
+            args.rev,
+            include_merges=args.include_merges,
+            pathspec=pathspec,
+        )
+        lines.append("## Recent commits")
+        lines.append("")
+        lines.append("| Commit | Subject |")
+        lines.append("|---|---|")
+        for sha, subj in recent:
+            lines.append(f"| {sha} | {subj} |")
+        lines.append("")
 
     lines.append("## Trends")
     lines.append("")
