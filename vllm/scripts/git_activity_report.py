@@ -135,19 +135,23 @@ def iter_short_commits(
     rev: str,
     include_merges: bool,
     pathspec: list[str],
-) -> list[tuple[str, str]]:
-    fmt = "%h%x09%s"
-    args = ["log", f"-{n}", rev, f"--pretty=format:{fmt}"]
+) -> list[tuple[str, str, str]]:
+    fmt = "%h%x09%ad%x09%s"
+    # Use an unambiguous timestamp format for reports.
+    args = ["log", f"-{n}", rev, "--date=iso-strict", f"--pretty=format:{fmt}"]
     if not include_merges:
         args.insert(1, "--no-merges")
     out = run_git(repo, _append_pathspec(args, pathspec))
 
-    commits: list[tuple[str, str]] = []
+    commits: list[tuple[str, str, str]] = []
     for line in out.splitlines():
         if "\t" not in line:
             continue
-        sha, subj = line.split("\t", 1)
-        commits.append((sha.strip(), subj.strip()))
+        parts = line.split("\t", 2)
+        if len(parts) != 3:
+            continue
+        sha, dt, subj = parts
+        commits.append((sha.strip(), dt.strip(), subj.strip()))
     return commits
 
 
@@ -466,10 +470,10 @@ def main(argv: list[str]) -> int:
         )
         lines.append("## Recent commits")
         lines.append("")
-        lines.append("| Commit | Subject |")
-        lines.append("|---|---|")
-        for sha, subj in recent:
-            lines.append(f"| {sha} | {subj} |")
+        lines.append("| Commit | Date (iso) | Subject |")
+        lines.append("|---|---|---|")
+        for sha, dt, subj in recent:
+            lines.append(f"| {sha} | {dt} | {subj} |")
         lines.append("")
 
     lines.append("## Trends")
