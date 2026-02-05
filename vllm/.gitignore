@@ -1,0 +1,6 @@
+# Ignore generated reports/snapshots
+reports/
+
+# Ignore Python bytecode caches
+scripts/__pycache__/
+*.pyc
