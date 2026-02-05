@@ -66,6 +66,38 @@ def run_git(repo: Path, args: list[str]) -> str:
         raise RuntimeError(e.output.strip() or f"git command failed: {' '.join(cmd)}") from e
 
 
+def _normalize_github_base(remote_url: str) -> str | None:
+    s = (remote_url or "").strip()
+    if not s:
+        return None
+
+    # Common forms:
+    # - https://github.com/org/repo
+    # - https://github.com/org/repo.git
+    # - git@github.com:org/repo.git
+    # - ssh://git@github.com/org/repo.git
+    if s.startswith("git@github.com:"):
+        s = "https://github.com/" + s[len("git@github.com:") :]
+    elif s.startswith("ssh://git@github.com/"):
+        s = "https://github.com/" + s[len("ssh://git@github.com/") :]
+
+    if s.endswith(".git"):
+        s = s[:-4]
+
+    if s.startswith("https://github.com/"):
+        return s.rstrip("/")
+
+    return None
+
+
+def detect_github_base(repo: Path) -> str | None:
+    try:
+        remote = run_git(repo, ["config", "--get", "remote.origin.url"]).strip()
+    except Exception:
+        return None
+    return _normalize_github_base(remote)
+
+
 def load_rules(rules_path: Path | None) -> list[Rule]:
     if rules_path is None:
         return [Rule(name, re.compile(rx)) for name, rx in DEFAULT_RULES]
@@ -135,23 +167,23 @@ def iter_short_commits(
     rev: str,
     include_merges: bool,
     pathspec: list[str],
-) -> list[tuple[str, str, str]]:
-    fmt = "%h%x09%ad%x09%s"
+) -> list[tuple[str, str, str, str]]:
+    fmt = "%H%x09%h%x09%ad%x09%s"
     # Use an unambiguous timestamp format for reports.
     args = ["log", f"-{n}", rev, "--date=iso-strict", f"--pretty=format:{fmt}"]
     if not include_merges:
         args.insert(1, "--no-merges")
     out = run_git(repo, _append_pathspec(args, pathspec))
 
-    commits: list[tuple[str, str, str]] = []
+    commits: list[tuple[str, str, str, str]] = []
     for line in out.splitlines():
         if "\t" not in line:
             continue
-        parts = line.split("\t", 2)
-        if len(parts) != 3:
+        parts = line.split("\t", 3)
+        if len(parts) != 4:
             continue
-        sha, dt, subj = parts
-        commits.append((sha.strip(), dt.strip(), subj.strip()))
+        full_sha, short_sha, dt, subj = parts
+        commits.append((full_sha.strip(), short_sha.strip(), dt.strip(), subj.strip()))
     return commits
 
 
@@ -372,6 +404,15 @@ def main(argv: list[str]) -> int:
         default=0,
         help="If >0, include a table listing the most recent matching commits (default: 0).",
     )
+    ap.add_argument(
+        "--github-base",
+        type=str,
+        default=None,
+        help=(
+            "Optional GitHub repo base URL like https://github.com/org/repo. "
+            "If omitted, tries to detect from remote.origin.url."
+        ),
+    )
 
     args = ap.parse_args(argv)
 
@@ -393,6 +434,16 @@ def main(argv: list[str]) -> int:
 
     head = run_git(repo, ["rev-parse", "--short", "HEAD"]).strip()
     branch = run_git(repo, ["rev-parse", "--abbrev-ref", "HEAD"]).strip()
+
+    github_base = None
+    if args.github_base:
+        github_base = _normalize_github_base(args.github_base)
+        if github_base is None:
+            raise SystemExit(
+                "--github-base must be a GitHub repo URL like https://github.com/org/repo"
+            )
+    else:
+        github_base = detect_github_base(repo)
 
     subjects_all = iter_subjects(
         repo,
@@ -472,8 +523,12 @@ def main(argv: list[str]) -> int:
         lines.append("")
         lines.append("| Commit | Date (iso) | Subject |")
         lines.append("|---|---|---|")
-        for sha, dt, subj in recent:
-            lines.append(f"| {sha} | {dt} | {subj} |")
+        for full_sha, short_sha, dt, subj in recent:
+            if github_base:
+                sha_cell = f"[{short_sha}]({github_base}/commit/{full_sha})"
+            else:
+                sha_cell = short_sha
+            lines.append(f"| {sha_cell} | {dt} | {subj} |")
         lines.append("")
 
     lines.append("## Trends")
