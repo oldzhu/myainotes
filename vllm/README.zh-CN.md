@@ -20,5 +20,8 @@ make bilingual-check
 - [vllm-custom-ops-and-native-kernels-deep-dive.md](vllm-custom-ops-and-native-kernels-deep-dive.md) | [简体中文](vllm-custom-ops-and-native-kernels-deep-dive.zh-CN.md)
 - [vllm-custom-ops-catalog.md](vllm-custom-ops-catalog.md) | [简体中文](vllm-custom-ops-catalog.zh-CN.md)
 - [vllm-custom-ops-mapping-table.md](vllm-custom-ops-mapping-table.md) | [简体中文](vllm-custom-ops-mapping-table.zh-CN.md)
+- [vllm-custom-ops-mapping-kv-cache.md](vllm-custom-ops-mapping-kv-cache.md) | [简体中文](vllm-custom-ops-mapping-kv-cache.zh-CN.md)
+- [vllm-custom-ops-mapping-attention.md](vllm-custom-ops-mapping-attention.md) | [简体中文](vllm-custom-ops-mapping-attention.zh-CN.md)
+- [vllm-custom-ops-mapping-norm-activation.md](vllm-custom-ops-mapping-norm-activation.md) | [简体中文](vllm-custom-ops-mapping-norm-activation.zh-CN.md)
 - [vllm-last-50-commits-trends.md](vllm-last-50-commits-trends.md) | [简体中文](vllm-last-50-commits-trends.zh-CN.md)
 - [scripts/README.md](scripts/README.md) | [简体中文](scripts/README.zh-CN.md)
