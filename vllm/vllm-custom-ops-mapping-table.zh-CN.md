@@ -26,3 +26,19 @@ $A = \text{softmax}(QK^T/\sqrt{d})V$ 进行计算。
 
 - 所有 `_C_cache_ops` 在 [vllm/csrc/torch_bindings.cpp](vllm/csrc/torch_bindings.cpp#L684) 注册。
 - 部分平台使用 Triton 版本的 cache 写入，本表聚焦 CUDA/HIP 原生实现。
+
+## 映射表：`torch.ops._C` 注意力算子（paged attention + merge）
+
+| 算子 | Python 调用点 + GPT 推理用途 | 原生实现 + 说明/伪代码 |
+|---|---|---|
+| `paged_attention_v1` | 封装见 [vllm/vllm/_custom_ops.py](vllm/vllm/_custom_ops.py#L33)。用途：在分页 KV cache 上做 decode 注意力，按 $A = \text{softmax}(QK^T/\sqrt{d})V$ 计算，依赖 block_table 与 seq_lens。 | 实现： [vllm/csrc/attention/paged_attention_v1.cu](vllm/csrc/attention/paged_attention_v1.cu#L20) 调度到核心 kernel [vllm/csrc/attention/attention_kernels.cuh](vllm/csrc/attention/attention_kernels.cuh#L41)。支持 head_size/block_size 特化与 block-sparse 参数。伪代码：`对每个 seq/head 遍历 blocks; 计算 QK 与 softmax; 累加 V`。
+| `paged_attention_v2` | 封装见 [vllm/vllm/_custom_ops.py](vllm/vllm/_custom_ops.py#L77)。用途：分块（partition）softmax 的 paged attention，先做分片，再归并。 | 实现： [vllm/csrc/attention/paged_attention_v2.cu](vllm/csrc/attention/paged_attention_v2.cu#L20) 启动分片 kernel + reduce kernel；核心数学在 [vllm/csrc/attention/attention_kernels.cuh](vllm/csrc/attention/attention_kernels.cuh#L41)。伪代码：`每个 partition 计算局部 softmax 与 logits; 记录 exp_sums/max_logits; reduce 得到最终输出`。
+| `merge_attn_states` | 封装见 [vllm/vllm/_custom_ops.py](vllm/vllm/_custom_ops.py#L187)，通过调度器 [vllm/vllm/v1/attention/ops/merge_attn_states.py](vllm/vllm/v1/attention/ops/merge_attn_states.py#L9) 合并部分注意力结果（prefix/suffix 或 split-KV）。用途：用 log-sum-exp 稳定合并输出。 | 实现：Triton 版本在 [vllm/vllm/v1/attention/ops/triton_merge_attn_states.py](vllm/vllm/v1/attention/ops/triton_merge_attn_states.py#L11)（参考 arXiv:2501.01005 §2.2）。若 CUDA 支持，则调用 `torch.ops._C.merge_attn_states` 的自定义扩展实现。伪代码：`max_lse=max(p_lse,s_lse); out=(p_out*exp(p_lse-max_lse)+s_out*exp(s_lse-max_lse))/(exp(p_lse-max_lse)+exp(s_lse-max_lse))`。
+
+## 映射表：归一化 + RoPE + 激活
+
+| 算子 | Python 调用点 + GPT 推理用途 | 原生实现 + 说明/伪代码 |
+|---|---|---|
+| `rms_norm` | 封装见 [vllm/vllm/_custom_ops.py](vllm/vllm/_custom_ops.py#L332)；RMSNorm 层调用 [vllm/vllm/model_executor/layers/layernorm.py](vllm/vllm/model_executor/layers/layernorm.py#L18-L31)。用途：Transformer 归一化，$y = x / \sqrt{\text{mean}(x^2)+\epsilon} * w$。 | CUDA 内核在 [vllm/csrc/layernorm_kernels.cu](vllm/csrc/layernorm_kernels.cu)。先做方差归约，再缩放并乘权重；对 FP16/BF16 做向量化。伪代码：`var=mean(x^2); y = x * rsqrt(var+eps) * w`。
+| `rotary_embedding` | 封装见 [vllm/vllm/_custom_ops.py](vllm/vllm/_custom_ops.py#L318)；RoPE 前向调用 [vllm/vllm/model_executor/layers/rotary_embedding/base.py](vllm/vllm/model_executor/layers/rotary_embedding/base.py#L200-L225)。用途：对 Q/K 应用 RoPE，使用缓存的 $\cos$/$\sin$ 旋转前 `rot_dim`。 | CUDA 内核在 [vllm/csrc/pos_encoding_kernels.cu](vllm/csrc/pos_encoding_kernels.cu)。支持 GPT‑NeoX 或 GPT‑J 风格旋转，原地更新 Q/K。伪代码：`x' = x*cos - y*sin; y' = y*cos + x*sin`。
+| `silu_and_mul` | SwiGLU 激活使用 [vllm/vllm/model_executor/layers/activation.py](vllm/vllm/model_executor/layers/activation.py#L115-L150)。用途：MLP gating，$\text{silu}(x)=x\sigma(x)$，输出 $\text{silu}(x_1) * x_2$。 | CUDA 内核在 [vllm/csrc/activation_kernels.cu](vllm/csrc/activation_kernels.cu)。对齐时使用 128-bit 向量化加载；计算 silu 后相乘（或 `mul_and_silu` 反向顺序）。伪代码：`out[i] = silu(x[i]) * y[i]`。
