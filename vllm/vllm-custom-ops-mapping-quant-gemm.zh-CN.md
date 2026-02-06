@@ -1,0 +1,20 @@
+# vLLM 自定义算子映射表：量化 + GEMM 阶段
+
+[English](vllm-custom-ops-mapping-quant-gemm.md) | [简体中文](vllm-custom-ops-mapping-quant-gemm.zh-CN.md)
+
+范围：Transformer 线性层使用的量化与低精度 GEMM 算子。
+
+## 映射表：量化 + GEMM
+
+| 算子 | Python 调用点 + GPT 推理用途 | 原生实现 + 说明/伪代码 |
+|---|---|---|
+| `awq_dequantize` | AWQ 路径调用 [vllm/vllm/model_executor/layers/quantization/awq.py](vllm/vllm/model_executor/layers/quantization/awq.py#L272)。用途：将 AWQ 权重量化块解码为密集权重，供 GEMM 或回退路径使用。 | CUDA 内核在 [vllm/csrc/quantization/awq/gemm_kernels.cu](vllm/csrc/quantization/awq/gemm_kernels.cu#L413)。将 4-bit 权重 + scale/zero 还原为 FP16/BF16。伪代码：`对每个 block: dequantize(qweight, scale, zero)`。
+| `awq_gemm` | AWQ GEMM 路径调用 [vllm/vllm/model_executor/layers/quantization/awq.py](vllm/vllm/model_executor/layers/quantization/awq.py#L275)。用途：W4A16 AWQ GEMM，用于 MLP/attention 线性层。 | CUDA 内核在 [vllm/csrc/quantization/awq/gemm_kernels.cu](vllm/csrc/quantization/awq/gemm_kernels.cu#L469)。融合解码与 GEMM。伪代码：`dequantize tiles; matmul`。
+| `gptq_shuffle` | GPTQ 权重预处理调用 [vllm/vllm/model_executor/layers/quantization/gptq.py](vllm/vllm/model_executor/layers/quantization/gptq.py#L368)。用途：按 group 索引重排 GPTQ packed 权重。 | CUDA 内核在 [vllm/csrc/quantization/gptq/q_gemm.cu](vllm/csrc/quantization/gptq/q_gemm.cu#L1853)。根据 `g_idx` 重新排列 packed bit。伪代码：`q_weight = permute(q_weight, g_idx)`。
+| `gptq_gemm` | GPTQ 线性层调用 [vllm/vllm/model_executor/layers/quantization/gptq.py](vllm/vllm/model_executor/layers/quantization/gptq.py#L381)。用途：4/8-bit GPTQ GEMM，支持 group 级 scale/zero。 | CUDA 内核在 [vllm/csrc/quantization/gptq/q_gemm.cu](vllm/csrc/quantization/gptq/q_gemm.cu#L1828)。按 group 解码并做 GEMM。伪代码：`对每个 group: dequantize; matmul`。
+| `cutlass_scaled_mm_azp` | CUTLASS scaled MM 路径调用 [vllm/vllm/model_executor/layers/quantization/kernels/scaled_mm/cutlass.py](vllm/vllm/model_executor/layers/quantization/kernels/scaled_mm/cutlass.py#L130)。用途：带激活 zero-point 修正的 W8A8 GEMM。 | CUTLASS 入口在 [vllm/csrc/quantization/w8a8/cutlass/scaled_mm_entry.cu](vllm/csrc/quantization/w8a8/cutlass/scaled_mm_entry.cu#L347)。按 SM 版本分发，并应用 AZP 修正。伪代码：`C = (A-azp) * B * scales + bias`。
+| `cutlass_scaled_mm` | CUTLASS scaled MM 路径调用 [vllm/vllm/model_executor/layers/quantization/kernels/scaled_mm/cutlass.py](vllm/vllm/model_executor/layers/quantization/kernels/scaled_mm/cutlass.py#L140)。用途：W8A8 scaled GEMM（FP8/BF16 体系）。 | CUTLASS 入口在 [vllm/csrc/quantization/w8a8/cutlass/scaled_mm_entry.cu](vllm/csrc/quantization/w8a8/cutlass/scaled_mm_entry.cu#L175)。分发到不同 SM 内核。伪代码：`C = (A * a_scale) * (B * b_scale)`。
+| `per_token_group_fp8_quant` | FP8 量化调用 [vllm/vllm/model_executor/layers/quantization/utils/fp8_utils.py](vllm/vllm/model_executor/layers/quantization/utils/fp8_utils.py#L926)。用途：对激活做 per-token-group FP8 量化。 | CUDA 内核在 [vllm/csrc/quantization/w8a8/fp8/per_token_group_quant.cu](vllm/csrc/quantization/w8a8/fp8/per_token_group_quant.cu#L379)。计算 group scale 并量化为 FP8。伪代码：`scale = max(abs(x_group)); q = clamp(x/scale)`。
+| `per_token_group_fp8_quant_packed` | FP8 量化调用 [vllm/vllm/model_executor/layers/quantization/utils/fp8_utils.py](vllm/vllm/model_executor/layers/quantization/utils/fp8_utils.py#L1034)。用途：将 per-token-group 量化输出打包成 8-bit/FP8 布局。 | CUDA 内核在 [vllm/csrc/quantization/w8a8/fp8/per_token_group_quant.cu](vllm/csrc/quantization/w8a8/fp8/per_token_group_quant.cu#L297)。输出 packed 布局供 GEMM 使用。伪代码：`quantize -> pack`。
+| `scaled_fp4_quant` | NVFP4 路径调用 [vllm/vllm/model_executor/layers/quantization/utils/nvfp4_utils.py](vllm/vllm/model_executor/layers/quantization/utils/nvfp4_utils.py#L214)。用途：将激活 scale+quant 为 FP4，供 FP4 GEMM 使用。 | CUDA 内核在 [vllm/csrc/quantization/fp4/nvfp4_quant_entry.cu](vllm/csrc/quantization/fp4/nvfp4_quant_entry.cu#L54)。按 block scale 量化。伪代码：`scale = max(abs(x_block)); q = quantize_fp4(x/scale)`。
+| `marlin_gemm` | Marlin 路径调用 [vllm/vllm/model_executor/layers/quantization/utils/marlin_utils.py](vllm/vllm/model_executor/layers/quantization/utils/marlin_utils.py#L566)。用途：Marlin W4A16 GEMM，加速量化线性层。 | CUDA 内核在 [vllm/csrc/quantization/marlin/marlin.cu](vllm/csrc/quantization/marlin/marlin.cu#L531)。Marlin tile + 内核内解码。伪代码：`dequantize tiles; matmul`。
