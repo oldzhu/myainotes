@@ -364,6 +364,11 @@ def render_markdown(
     lines: list[str] = []
     lines.append("# vLLM custom ops catalog (Python-exposed)")
     lines.append("")
+    lines.append(
+        "[English](vllm-custom-ops-catalog.md) | "
+        "[Chinese (ZH-CN)](vllm-custom-ops-catalog.zh-CN.md)"
+    )
+    lines.append("")
     lines.append(f"Repo: `{repo}`")
     lines.append(f"Generated: `{now}`")
     lines.append("")

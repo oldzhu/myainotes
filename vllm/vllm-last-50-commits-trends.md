@@ -1,5 +1,7 @@
 # vLLM: last 50 commits (local `main`) — trends & hot areas
 
+[English](vllm-last-50-commits-trends.md) | [Chinese (ZH-CN)](vllm-last-50-commits-trends.zh-CN.md)
+
 Context: this is a lightweight activity report over the most recent 50 commits in `/home/oldzhu/vllm` (HEAD `02080179a`).
 
 ## High-level trends (from commit subjects)

@@ -1,31 +1,31 @@
-# Reusable analysis scripts
+# 可复用分析脚本
 
-[English](README.md) | [Chinese (ZH-CN)](README.zh-CN.md)
+[English](README.md) | [简体中文](README.zh-CN.md)
 
-These scripts are meant to be re-run whenever you want a quick “what changed recently?” view.
+这些脚本用于反复生成“最近发生了什么变化？”的快速视图。
 
 ## `git_activity_report.py`
 
-Generates a Markdown report from `git log`:
+从 `git log` 生成 Markdown 报告：
 
-- commit subject tag/prefix counts (e.g. `[Bugfix]`, `[CI/Build]`)
-- top subject keywords
-- top active areas (by commits touching the area)
-- hottest areas by touched-file count
-- hottest areas by churn (added+deleted)
-- hottest files by touch count / churn
+- 提交标题标签/前缀统计（如 `[Bugfix]`, `[CI/Build]`）
+- 标题关键词统计
+- 活跃区域（按触及该区域的提交数）
+- 热门区域（按触及文件数）
+- 高 churn 区域（新增+删除）
+- 热门文件（触及次数/新增删除）
 
-### Usage
+### 用法
 
-From this notes repo:
+在此 notes 仓库中：
 
 ```bash
 python3 scripts/git_activity_report.py --repo ~/vllm -n 50 --out /tmp/vllm-last-50.md
 ```
 
-### Monitoring a specific area (path-filtered)
+### 监控特定区域（按路径过滤）
 
-If you only care about “custom ops + native kernels” changes, filter by paths (same semantics as `git log -- <paths...>`):
+如果你只关注“自定义算子 + 原生内核”的改动，可按路径过滤（语义等同于 `git log -- <paths...>`）：
 
 ```bash
 python3 scripts/git_activity_report.py \
@@ -36,7 +36,7 @@ python3 scripts/git_activity_report.py \
   --out /tmp/vllm-kernels-last-10.md
 ```
 
-You can also keep a list in a file:
+也可以把路径写到文件里：
 
 ```bash
 cat > /tmp/vllm-kernel-paths.txt <<'EOF'
@@ -53,38 +53,38 @@ python3 scripts/git_activity_report.py --repo ~/vllm -n 10 --show-commits 10 \
 
 ## `snapshot_git_activity.py`
 
-Convenience wrapper to generate a **timestamped** report under `./reports/` (relative to your current working directory), with an optional `latest-<repo>.md` copy.
+便捷包装：生成带**时间戳**的报告到 `./reports/`（相对当前工作目录），可选生成 `latest-<repo>.md`。
 
-### Usage
+### 用法
 
-From this notes repo:
+在此 notes 仓库中：
 
 ```bash
 python3 scripts/snapshot_git_activity.py --repo ~/vllm -n 50 --latest
 ```
 
-Path-filtered snapshot:
+路径过滤快照：
 
 ```bash
 python3 scripts/snapshot_git_activity.py --repo ~/vllm -n 10 --latest --show-commits 10 \
   --path vllm/_custom_ops.py --path csrc --path vllm/v1/attention
 ```
 
-Write into a specific folder:
+写入指定目录：
 
 ```bash
 python3 scripts/snapshot_git_activity.py --repo ~/vllm -n 50 --out-dir /home/oldzhu/mynotes/vllm/reports --latest
 ```
 
-## Makefile shortcuts
+## Makefile 快捷命令
 
-If you’re in the notes folder (`/home/oldzhu/mynotes/vllm`), you can run:
+如果你在 notes 目录（`/home/oldzhu/mynotes/vllm`），可以运行：
 
 ```bash
 make vllm-last50
 ```
 
-For custom-ops/native-kernels monitoring:
+监控自定义算子/原生内核：
 
 ```bash
 make vllm-kernels-last10
@@ -92,50 +92,50 @@ make vllm-kernels-last10
 
 ## `check_bilingual_docs.py`
 
-Validates the bilingual policy across this notes repo:
+校验此 notes 仓库的双语规范：
 
-- every English `.md` has a matching `.zh-CN.md`
-- every `.zh-CN.md` has a matching English `.md`
-- both include the language switch link near the top
+- 每个英文 `.md` 都有对应的 `.zh-CN.md`
+- 每个 `.zh-CN.md` 都有对应的英文 `.md`
+- 两者在顶部都包含语言切换链接
 
-### Usage
+### 用法
 
-From this notes repo:
+在 notes 仓库内：
 
 ```bash
 python3 scripts/check_bilingual_docs.py --root /home/oldzhu/mynotes/vllm
 ```
 
-Or via Makefile:
+或通过 Makefile：
 
 ```bash
 make bilingual-check
 ```
 
-Override the repo path if needed:
+需要的话可覆盖仓库路径：
 
 ```bash
 make vllm-last50 VLLM_REPO=/path/to/vllm
 ```
 
-Different window / revision:
+不同窗口 / 版本区间：
 
 ```bash
 python3 scripts/git_activity_report.py --repo ~/vllm -n 200 --rev main --out /tmp/vllm-last-200.md
 python3 scripts/git_activity_report.py --repo ~/vllm -n 100 --rev v0.6.0..HEAD --out /tmp/vllm-since-v0.6.0.md
 ```
 
-Include merges (usually you **don’t** want this for churn stats):
+包含 merge（通常不建议用于 churn 统计）：
 
 ```bash
 python3 scripts/git_activity_report.py --repo ~/vllm -n 50 --include-merges
 ```
 
-### Custom “area bucketing” rules
+### 自定义“区域归类”规则
 
-Default rules are embedded in the script. To override:
+默认规则内置在脚本里，若要覆盖：
 
-1) Create a JSON file like:
+1) 创建 JSON：
 
 ```json
 [
@@ -145,7 +145,7 @@ Default rules are embedded in the script. To override:
 ]
 ```
 
-2) Run:
+2) 运行：
 
 ```bash
 python3 scripts/git_activity_report.py --repo ~/vllm -n 50 --rules rules.json

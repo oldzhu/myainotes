@@ -1,5 +1,7 @@
 # vLLM deep dive: `_custom_ops.py` → native kernels (`csrc/`) → inference speed
 
+[English](vllm-custom-ops-and-native-kernels-deep-dive.md) | [Chinese (ZH-CN)](vllm-custom-ops-and-native-kernels-deep-dive.zh-CN.md)
+
 This note maps **vLLM’s Python↔native “glue” layer** to concrete GPT inference components and explains (at a contributor level) how the native kernels are registered, called, and why they’re faster than “plain PyTorch” equivalents.
 
 Scope:

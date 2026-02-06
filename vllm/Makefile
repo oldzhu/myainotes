@@ -1,4 +1,4 @@
-.PHONY: help vllm-last50 vllm-last200 vllm-since-tag vllm-kernels-last10 clean-reports
+.PHONY: help vllm-last50 vllm-last200 vllm-since-tag vllm-kernels-last10 clean-reports bilingual-check
 
 # Default repo to analyze.
 VLLM_REPO ?= $(HOME)/vllm
@@ -19,6 +19,7 @@ help:
 	@echo "  make vllm-since-tag   # snapshot changes since TAG (requires TAG=...)"
 	@echo "  make vllm-kernels-last10 # snapshot last 10 commits touching custom ops/native kernels"
 	@echo "  make clean-reports    # delete generated reports in $(OUT_DIR)/"
+	@echo "  make bilingual-check  # validate EN/ZH markdown pairs + switch links"
 	@echo ""
 	@echo "Variables: VLLM_REPO=$(VLLM_REPO) OUT_DIR=$(OUT_DIR) REV=$(REV)"
 	@echo "           KERNEL_WATCH_PATHS=$(KERNEL_WATCH_PATHS)"
@@ -43,3 +44,6 @@ vllm-kernels-last10:
 clean-reports:
 	@mkdir -p "$(OUT_DIR)"
 	@rm -f "$(OUT_DIR)"/*.md
+
+bilingual-check:
+	python3 scripts/check_bilingual_docs.py --root "$(CURDIR)"

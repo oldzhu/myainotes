@@ -1,0 +1,23 @@
+# vLLM 笔记（双语）
+
+[English](README.md) | [简体中文](README.zh-CN.md)
+
+## 双语规范
+
+此笔记仓库中的所有文档必须同时提供英文版与简体中文版。
+每个英文 Markdown 文件都应有对应的 `*.zh-CN.md` 文件，并在两个文件顶部添加
+互相切换的链接，方便读者切换语言。
+
+可用以下命令校验：
+
+```bash
+make bilingual-check
+```
+
+## 文档列表
+
+- [vllm-architecture-and-onboarding.md](vllm-architecture-and-onboarding.md) | [简体中文](vllm-architecture-and-onboarding.zh-CN.md)
+- [vllm-custom-ops-and-native-kernels-deep-dive.md](vllm-custom-ops-and-native-kernels-deep-dive.md) | [简体中文](vllm-custom-ops-and-native-kernels-deep-dive.zh-CN.md)
+- [vllm-custom-ops-catalog.md](vllm-custom-ops-catalog.md) | [简体中文](vllm-custom-ops-catalog.zh-CN.md)
+- [vllm-last-50-commits-trends.md](vllm-last-50-commits-trends.md) | [简体中文](vllm-last-50-commits-trends.zh-CN.md)
+- [scripts/README.md](scripts/README.md) | [简体中文](scripts/README.zh-CN.md)

@@ -1,5 +1,7 @@
 # vLLM (repo @ ~/vllm) — Architecture, Source Tree, and Contributor Onboarding Notes
 
+[English](vllm-architecture-and-onboarding.md) | [Chinese (ZH-CN)](vllm-architecture-and-onboarding.zh-CN.md)
+
 > Goal: a practical, code-pointer-heavy guide to understand vLLM’s runtime pipeline (v1), how the repo is laid out, and how to start contributing.
 
 ---
