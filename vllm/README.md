@@ -19,5 +19,6 @@ make bilingual-check
 - [vllm-architecture-and-onboarding.md](vllm-architecture-and-onboarding.md) | [Chinese (ZH-CN)](vllm-architecture-and-onboarding.zh-CN.md)
 - [vllm-custom-ops-and-native-kernels-deep-dive.md](vllm-custom-ops-and-native-kernels-deep-dive.md) | [Chinese (ZH-CN)](vllm-custom-ops-and-native-kernels-deep-dive.zh-CN.md)
 - [vllm-custom-ops-catalog.md](vllm-custom-ops-catalog.md) | [Chinese (ZH-CN)](vllm-custom-ops-catalog.zh-CN.md)
+- [vllm-custom-ops-mapping-table.md](vllm-custom-ops-mapping-table.md) | [Chinese (ZH-CN)](vllm-custom-ops-mapping-table.zh-CN.md)
 - [vllm-last-50-commits-trends.md](vllm-last-50-commits-trends.md) | [Chinese (ZH-CN)](vllm-last-50-commits-trends.zh-CN.md)
 - [scripts/README.md](scripts/README.md) | [Chinese (ZH-CN)](scripts/README.zh-CN.md)
