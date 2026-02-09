@@ -1,5 +1,7 @@
 # What changed (custom ops + native kernels)
 
+[English](vllm-activity-summary-3920cafdd__HEAD-20260208-120459.md) | [Chinese (ZH-CN)](vllm-activity-summary-3920cafdd__HEAD-20260208-120459.zh-CN.md)
+
 Source report: [vllm-activity-n10-3920cafdd__HEAD-20260208-120459.md](vllm-activity-n10-3920cafdd__HEAD-20260208-120459.md)
 Generated: 2026-02-08
 

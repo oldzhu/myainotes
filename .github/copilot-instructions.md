@@ -8,6 +8,7 @@ These instructions apply to work in `/home/oldzhu/mynotes`, especially the vLLM 
 - Every pair must include a language switch link near the top, e.g.:
   - `[English](doc.md) | [Chinese (ZH-CN)](doc.zh-CN.md)` in English files
   - `[English](doc.md) | [简体中文](doc.zh-CN.md)` in Chinese files
+- Reports under `vllm/reports/` follow the same bilingual policy.
 - Keep both versions in sync when editing or creating docs.
 - Validate before committing with: `make bilingual-check` (from `/home/oldzhu/mynotes/vllm`).
 

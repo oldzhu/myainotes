@@ -1,32 +1,32 @@
-# Git activity report: last 10 commits (main@7fcb705b8)
+# Git 活动报告：最近 10 次提交 (main@7fcb705b8)
 
-[English](vllm-activity-n10-3920cafdd__HEAD-20260208-120459.md) | [Chinese (ZH-CN)](vllm-activity-n10-3920cafdd__HEAD-20260208-120459.zh-CN.md)
+[English](vllm-activity-n10-3920cafdd__HEAD-20260208-120459.md) | [简体中文](vllm-activity-n10-3920cafdd__HEAD-20260208-120459.zh-CN.md)
 
-Repo: `/home/oldzhu/vllm`
-Generated: `2026-02-08 12:04`
-Path filter: `vllm/_custom_ops.py, vllm/_aiter_ops.py, csrc, vllm/v1/attention`
+仓库：`/home/oldzhu/vllm`
+生成时间：`2026-02-08 12:04`
+路径过滤：`vllm/_custom_ops.py, vllm/_aiter_ops.py, csrc, vllm/v1/attention`
 
-## Recent commits
+## 最近提交
 
-| Commit | Date (iso) | Subject |
+| 提交 | 日期 (iso) | 主题 |
 |---|---|---|
 | [ed17f54c8](https://github.com/oldzhu/vllm/commit/ed17f54c8bccc2f1a19f83f65b36d837698b8792) | 2026-02-07T05:33:11-08:00 | Perf tuning and expansion of cases covered for wvSplitKrc (#33493) |
 | [de3869bb4](https://github.com/oldzhu/vllm/commit/de3869bb4db76658bc4775ba4ba5fa6ef546237a) | 2026-02-07T07:30:09-06:00 | move checks out of `unified_kv_cache_update` custom op (#33943) |
 | [15a0b9e57](https://github.com/oldzhu/vllm/commit/15a0b9e570dc8bfe716a7d76d50716898123dbae) | 2026-02-07T15:58:50+08:00 | Fix spelling errors (#33978) |
 | [bc32444b2](https://github.com/oldzhu/vllm/commit/bc32444b238d2ec3726f599cf3fc67dbaf51a6c6) | 2026-02-06T20:28:01-08:00 | [Kernel] Add enable_sm120_or_later for SM121 (DGX Spark) CUTLASS support (#33517) |
 
-## Trends
+## 趋势
 
-### Commit subject tags/prefixes
+### 提交主题标签/前缀
 
-| Prefix | Count |
+| 前缀 | 计数 |
 |---|---:|
 | (no tag) | 3 |
 | Kernel | 1 |
 
-### Top subject keywords
+### 主题关键词 Top
 
-| Keyword | Count |
+| 关键词 | 计数 |
 |---|---:|
 | perf | 1 |
 | tuning | 1 |
@@ -44,32 +44,32 @@ Path filter: `vllm/_custom_ops.py, vllm/_aiter_ops.py, csrc, vllm/v1/attention`
 | enable_sm120_or_later | 1 |
 | sm121 | 1 |
 
-## Top work items (areas)
+## 主要工作项（区域）
 
-Ranked by number of commits touching the area.
+按触及该区域的提交次数排序。
 
-| Area | Commits | Sample subjects |
+| 区域 | 提交数 | 示例主题 |
 |---|---:|---|
 | csrc | 2 | Perf tuning and expansion of cases covered for wvSplitKrc (#33493)<br>[Kernel] Add enable_sm120_or_later for SM121 (DGX Spark) CUTLASS support (#33517) |
 | vllm/v1 | 2 | move checks out of `unified_kv_cache_update` custom op (#33943)<br>Fix spelling errors (#33978) |
 
-## Hot areas (by file touches)
+## 热点区域（按触及文件数）
 
-| Area | Touched files |
+| 区域 | 触及文件数 |
 |---|---:|
 | vllm/v1 | 5 |
 | csrc | 3 |
 
-## Hot areas (by churn)
+## 热点区域（按变更量）
 
-| Area | Added+Deleted |
+| 区域 | 新增+删除 |
 |---|---:|
 | csrc | 341 |
 | vllm/v1 | 163 |
 
-## Hot files (by touch frequency)
+## 热点文件（按触及次数）
 
-| File | Touches |
+| 文件 | 触及次数 |
 |---|---:|
 | csrc/rocm/skinny_gemms.cu | 1 |
 | vllm/v1/attention/backends/flash_attn.py | 1 |
@@ -80,9 +80,9 @@ Ranked by number of commits touching the area.
 | csrc/cutlass_extensions/common.hpp | 1 |
 | csrc/quantization/w8a8/cutlass/c3x/scaled_mm_blockwise_sm120_fp8_dispatch.cuh | 1 |
 
-## Hot files (by churn)
+## 热点文件（按变更量）
 
-| File | Added+Deleted |
+| 文件 | 新增+删除 |
 |---|---:|
 | csrc/rocm/skinny_gemms.cu | 327 |
 | vllm/v1/attention/backends/rocm_attn.py | 74 |
@@ -93,9 +93,9 @@ Ranked by number of commits touching the area.
 | vllm/v1/attention/ops/flashmla.py | 8 |
 | csrc/quantization/w8a8/cutlass/c3x/scaled_mm_blockwise_sm120_fp8_dispatch.cuh | 3 |
 
-## Bucketing rules
+## 分桶规则
 
-You can override these with `--rules rules.json`. Format is JSON list: `[{name, pattern}, ...]`.
+可用 `--rules rules.json` 覆盖。格式为 JSON 列表：`[{name, pattern}, ...]`。
 
 ```json
 [
@@ -161,7 +161,7 @@ You can override these with `--rules rules.json`. Format is JSON list: `[{name, 
   },
   {
     "name": "build/packaging",
-    "pattern": "^(pyproject\\\\.toml|setup\\\\.py|CMakeLists\\\\.txt|cmake/|MANIFEST\\\\.in|requirements/)"
+    "pattern": "^(pyproject\\.toml|setup\\.py|CMakeLists\\.txt|cmake/|MANIFEST\\.in|requirements/)"
   }
 ]
 ```

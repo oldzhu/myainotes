@@ -1,5 +1,7 @@
 # Git activity report: last 10 commits (main@7fcb705b8)
 
+[English](latest-vllm.md) | [Chinese (ZH-CN)](latest-vllm.zh-CN.md)
+
 Repo: `/home/oldzhu/vllm`
 Generated: `2026-02-08 12:04`
 Path filter: `vllm/_custom_ops.py, vllm/_aiter_ops.py, csrc, vllm/v1/attention`
