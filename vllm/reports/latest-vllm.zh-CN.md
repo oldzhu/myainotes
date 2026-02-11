@@ -1,16 +1,19 @@
-# Git 活动报告：最近 10 次提交 (main@f97ca6717)
+# Git 活动报告：最近 10 次提交 (main@578977bb5)
 
 [English](latest-vllm.md) | [简体中文](latest-vllm.zh-CN.md)
 
 仓库：`/home/oldzhu/vllm`
-生成时间：`2026-02-09 10:13`
+生成时间：`2026-02-11 12:09`
 路径过滤：`vllm/_custom_ops.py, vllm/_aiter_ops.py, csrc, vllm/v1/attention`
 
 ## 最近提交
 
 | 提交 | 日期 (iso) | 主题 |
 |---|---|---|
-| [179ae7da8](https://github.com/oldzhu/vllm/commit/179ae7da8f48f76b0db4dc3e331153b24a36a96a) | 2026-02-09T00:13:24+08:00 | [Revert] Fix performance regression for GLM-4.7-GPTQ decode and MTP acceptance rate (#33771) |
+| [000214c4b](https://github.com/oldzhu/vllm/commit/000214c4bb3f4fb61989eea19c625aedd0559ace) | 2026-02-10T19:57:11+04:00 | [BUGFIX] Fix accuracy bugs in Qwen3-Next MTP (#34077) |
+| [afdce12c8](https://github.com/oldzhu/vllm/commit/afdce12c89555ce7b7bd4f3215b5d844de0a32ed) | 2026-02-10T16:29:52+01:00 | [Perf][Kernel] Add faster topKperRow decode kernel for DeepSeek-V3.2 sparse attention (#33680) |
+| [caad9f1e0](https://github.com/oldzhu/vllm/commit/caad9f1e01ee04e4f5912d0287031ea3a850f6dc) | 2026-02-09T10:04:41+00:00 | [Fix] [CPU Backend] : Prepack weights for w8a8 oneDNN matmul (#33901) |
+| [5a5c43511](https://github.com/oldzhu/vllm/commit/5a5c43511ac98299856d0fee6c619fdd8bcdd2ef) | 2026-02-09T16:55:41+08:00 | fix(cpu): fix mla_decode compilation on x86 without AVX512 (#34052) |
 
 ## 趋势
 
@@ -18,20 +21,30 @@
 
 | 前缀 | 计数 |
 |---|---:|
-| Revert | 1 |
+| BUGFIX | 1 |
+| Perf | 1 |
+| Fix | 1 |
+| (no tag) | 1 |
 
 ### 主题关键词 Top
 
 | 关键词 | 计数 |
 |---|---:|
-| performance | 1 |
-| regression | 1 |
-| glm-4 | 1 |
-| gptq | 1 |
-| decode | 1 |
+| kernel | 2 |
+| cpu | 2 |
+| accuracy | 1 |
+| bugs | 1 |
+| qwen3-next | 1 |
 | mtp | 1 |
-| acceptance | 1 |
-| rate | 1 |
+| faster | 1 |
+| topkperrow | 1 |
+| decode | 1 |
+| deepseek-v3 | 1 |
+| sparse | 1 |
+| attention | 1 |
+| backend | 1 |
+| prepack | 1 |
+| weights | 1 |
 
 ## 主要工作项（区域）
 
@@ -39,31 +52,48 @@
 
 | 区域 | 提交数 | 示例主题 |
 |---|---:|---|
-| vllm/v1 | 1 | [Revert] Fix performance regression for GLM-4.7-GPTQ decode and MTP acceptance rate (#33771) |
+| csrc | 3 | [Perf][Kernel] Add faster topKperRow decode kernel for DeepSeek-V3.2 sparse attention (#33680)<br>[Fix] [CPU Backend] : Prepack weights for w8a8 oneDNN matmul (#33901)<br>fix(cpu): fix mla_decode compilation on x86 without AVX512 (#34052) |
+| vllm/v1 | 2 | [BUGFIX] Fix accuracy bugs in Qwen3-Next MTP (#34077)<br>[Perf][Kernel] Add faster topKperRow decode kernel for DeepSeek-V3.2 sparse attention (#33680) |
 
 ## 热点区域（按触及文件数）
 
 | 区域 | 触及文件数 |
 |---|---:|
-| vllm/v1 | 1 |
+| csrc | 6 |
+| vllm/v1 | 2 |
 
 ## 热点区域（按变更量）
 
 | 区域 | 新增+删除 |
 |---|---:|
-| vllm/v1 | 4 |
+| csrc | 408 |
+| vllm/v1 | 41 |
 
 ## 热点文件（按触及次数）
 
 | 文件 | 触及次数 |
 |---|---:|
-| vllm/v1/attention/backends/flashinfer.py | 1 |
+| vllm/v1/attention/backends/gdn_attn.py | 1 |
+| csrc/ops.h | 1 |
+| csrc/sampler.cu | 1 |
+| csrc/topk.cu | 1 |
+| csrc/torch_bindings.cpp | 1 |
+| vllm/v1/attention/backends/mla/indexer.py | 1 |
+| csrc/cpu/dnnl_helper.cpp | 1 |
+| csrc/cpu/mla_decode.cpp | 1 |
 
 ## 热点文件（按变更量）
 
 | 文件 | 新增+删除 |
 |---|---:|
-| vllm/v1/attention/backends/flashinfer.py | 4 |
+| csrc/topk.cu | 373 |
+| vllm/v1/attention/backends/gdn_attn.py | 22 |
+| vllm/v1/attention/backends/mla/indexer.py | 19 |
+| csrc/cpu/dnnl_helper.cpp | 12 |
+| csrc/cpu/mla_decode.cpp | 11 |
+| csrc/torch_bindings.cpp | 6 |
+| csrc/ops.h | 4 |
+| csrc/sampler.cu | 2 |
 
 ## 分桶规则
 
