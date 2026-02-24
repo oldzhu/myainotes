@@ -32,3 +32,8 @@ These instructions apply to work in `/home/oldzhu/mynotes`, especially the vLLM 
   - Python call site + GPT inference purpose (map to formulas/papers if relevant)
   - Native C++/CUDA/ROCm source file + description + pseudo-code
 - Provide both English and Simplified Chinese versions.
+
+## 6) Reusable skill scripts
+
+- When a task is repeatable, consider creating a new skill script under `vllm/scripts/`.
+- If a relevant script already exists, reuse or extend it instead of duplicating logic.
